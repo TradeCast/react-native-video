@@ -40,12 +40,7 @@ import com.google.android.exoplayer2.mediacodec.MediaCodecRenderer;
 import com.google.android.exoplayer2.mediacodec.MediaCodecUtil;
 import com.google.android.exoplayer2.metadata.Metadata;
 import com.google.android.exoplayer2.metadata.MetadataRenderer;
-import com.google.android.exoplayer2.source.BehindLiveWindowException;
-import com.google.android.exoplayer2.source.ExtractorMediaSource;
-import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.source.MergingMediaSource;
-import com.google.android.exoplayer2.source.SingleSampleMediaSource;
-import com.google.android.exoplayer2.source.TrackGroupArray;
+import com.google.android.exoplayer2.source.*;
 import com.google.android.exoplayer2.source.dash.DashMediaSource;
 import com.google.android.exoplayer2.source.dash.DefaultDashChunkSource;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
@@ -122,6 +117,9 @@ class ReactExoplayerView extends FrameLayout implements
     private String audioTrackType;
     private Dynamic audioTrackValue;
     private ReadableArray audioTracks;
+    private String videoTrackType;
+    private String videoTrackValue;
+    private ReadableArray videoTracks;
     private String textTrackType;
     private Dynamic textTrackValue;
     private ReadableArray textTracks;
@@ -513,12 +511,41 @@ class ReactExoplayerView extends FrameLayout implements
             loadVideoStarted = false;
             setSelectedAudioTrack(audioTrackType, audioTrackValue);
             setSelectedTextTrack(textTrackType, textTrackValue);
+            setSelectedVideoTrack(videoTrackType, videoTrackValue);
+
             Format videoFormat = player.getVideoFormat();
             int width = videoFormat != null ? videoFormat.width : 0;
             int height = videoFormat != null ? videoFormat.height : 0;
             eventEmitter.load(player.getDuration(), player.getCurrentPosition(), width, height,
-                    getAudioTrackInfo(), getTextTrackInfo());
+                    getVideoTrackInfo(), getAudioTrackInfo(), getTextTrackInfo());
         }
+    }
+
+    private WritableArray getVideoTrackInfo() {
+        WritableArray videoTracks = Arguments.createArray();
+        int rendererIndex = getTrackRendererIndex(C.TRACK_TYPE_VIDEO);
+
+        MappingTrackSelector.MappedTrackInfo trackInfo = trackSelector.getCurrentMappedTrackInfo();
+        TrackGroupArray trackGroupArray = trackInfo.getTrackGroups(rendererIndex);
+        TrackGroup trackGroup = trackGroupArray.get(0);
+
+        if (trackGroup == null || rendererIndex == C.INDEX_UNSET) {
+            return videoTracks;
+        }
+
+        for (int formatIndex = 0; formatIndex < trackGroup.length; formatIndex++) {
+            Format format = trackGroup.getFormat(formatIndex);
+            WritableMap formatMap = Arguments.createMap();
+            formatMap.putString("title", format.id);
+            formatMap.putInt("height", format.height);
+            formatMap.putInt("width", format.width);
+            formatMap.putDouble("framerate", format.frameRate);
+            formatMap.putString("type", format.containerMimeType);
+
+            videoTracks.pushMap(formatMap);
+        }
+
+        return videoTracks;
     }
 
     private WritableArray getAudioTrackInfo() {
@@ -616,7 +643,7 @@ class ReactExoplayerView extends FrameLayout implements
 
     @Override
     public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
-        // Do Nothing.
+
     }
 
     @Override
@@ -839,6 +866,51 @@ class ReactExoplayerView extends FrameLayout implements
             }
         }
         return trackIndex;
+    }
+
+    public void setSelectedVideoTrack(String type, String value) {
+        videoTrackType = type;
+        videoTrackValue = value;
+        int trackIndex = -1;
+
+        int rendererIndex = getTrackRendererIndex(C.TRACK_TYPE_VIDEO);
+
+        MappingTrackSelector.MappedTrackInfo trackInfo = trackSelector.getCurrentMappedTrackInfo();
+        if (trackInfo == null) {
+            return;
+        }
+
+        TrackGroupArray trackGroupArray = trackInfo.getTrackGroups(rendererIndex);
+
+        if (value == null) {
+            trackSelector.clearSelectionOverride(rendererIndex, trackGroupArray);
+        }
+
+        TrackGroup trackGroup = trackGroupArray.get(0);
+
+        if (trackGroup == null || rendererIndex == C.INDEX_UNSET) {
+            return;
+        }
+
+        for (int formatIndex = 0; formatIndex < trackGroup.length; formatIndex++) {
+            Format format = trackGroup.getFormat(formatIndex);
+            String title = format.id;
+
+            if (title.equals(value)) {
+                trackIndex = formatIndex;
+            }
+        }
+
+        if (trackIndex == -1 || trackIndex > trackGroup.length) {
+            return;
+        }
+
+
+        MappingTrackSelector.SelectionOverride override
+                = new MappingTrackSelector.SelectionOverride(
+                new FixedTrackSelection.Factory(), 0, trackIndex);
+        trackSelector.setSelectionOverride(0, trackGroupArray, override);
+
     }
 
     public void setSelectedAudioTrack(String type, Dynamic value) {
