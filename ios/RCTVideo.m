@@ -453,40 +453,40 @@ static int const RCTVideoUnset = -1;
         for (AVMetadataItem *item in items) {
           NSString *value = (NSString *)item.value;
           NSString *identifier = item.identifier;
-          
+
           if (![value isEqual: [NSNull null]]) {
             NSDictionary *dictionary = [[NSDictionary alloc] initWithObjects:@[value, identifier] forKeys:@[@"value", @"identifier"]];
-            
+
             [array addObject:dictionary];
           }
         }
-        
+
         self.onTimedMetadata(@{
                                @"target": self.reactTag,
                                @"metadata": array
                                });
       }
     }
-    
+
     if ([keyPath isEqualToString:statusKeyPath]) {
       // Handle player item status change.
       if (_playerItem.status == AVPlayerItemStatusReadyToPlay) {
         float duration = CMTimeGetSeconds(_playerItem.asset.duration);
-        
+
         if (isnan(duration)) {
           duration = 0.0;
         }
-        
+
         NSObject *width = @"undefined";
         NSObject *height = @"undefined";
         NSString *orientation = @"undefined";
-        
+
         if ([_playerItem.asset tracksWithMediaType:AVMediaTypeVideo].count > 0) {
           AVAssetTrack *videoTrack = [[_playerItem.asset tracksWithMediaType:AVMediaTypeVideo] objectAtIndex:0];
           width = [NSNumber numberWithFloat:videoTrack.naturalSize.width];
           height = [NSNumber numberWithFloat:videoTrack.naturalSize.height];
           CGAffineTransform preferredTransform = [videoTrack preferredTransform];
-          
+
           if ((videoTrack.naturalSize.width == preferredTransform.tx
                && videoTrack.naturalSize.height == preferredTransform.ty)
               || (preferredTransform.tx == 0 && preferredTransform.ty == 0))
@@ -496,7 +496,7 @@ static int const RCTVideoUnset = -1;
             orientation = @"portrait";
           }
         }
-        
+
         if (self.onVideoLoad && _videoLoadStarted) {
           self.onVideoLoad(@{@"duration": [NSNumber numberWithFloat:duration],
                              @"currentTime": [NSNumber numberWithFloat:CMTimeGetSeconds(_playerItem.currentTime)],
@@ -516,7 +516,7 @@ static int const RCTVideoUnset = -1;
                              @"target": self.reactTag});
         }
         _videoLoadStarted = NO;
-        
+
         [self attachListeners];
         [self applyModifiers];
       } else if (_playerItem.status == AVPlayerItemStatusFailed && self.onVideoError) {
@@ -686,7 +686,8 @@ static int const RCTVideoUnset = -1;
     CMTime cmSeekTime = CMTimeMakeWithSeconds([seekTime floatValue], timeScale);
     CMTime current = item.currentTime;
     // TODO figure out a good tolerance level
-    CMTime tolerance = CMTimeMake([seekTolerance floatValue], timeScale);
+    CMTime tolerance = CMTi
+      meMake([seekTolerance floatValue], timeScale);
     BOOL wasPaused = _paused;
     
     if (CMTimeCompare(current, cmSeekTime) != 0) {
@@ -924,7 +925,7 @@ static int const RCTVideoUnset = -1;
     [_player.currentItem selectMediaOptionAutomaticallyInMediaSelectionGroup:group];
     return;
   }
-  
+
   // If a match isn't found, option will be nil and text tracks will be disabled
   [_player.currentItem selectMediaOption:mediaOption inMediaSelectionGroup:group];
 }
@@ -981,6 +982,9 @@ static int const RCTVideoUnset = -1;
                                 @"index": [NSNumber numberWithInt:i],
                                 @"title": title,
                                 @"language": language
+                                  
+                                  
+                                  
                                 };
     [textTracks addObject:textTrack];
   }
