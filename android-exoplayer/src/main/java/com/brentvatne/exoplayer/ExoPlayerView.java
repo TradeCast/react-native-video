@@ -2,6 +2,8 @@ package com.brentvatne.exoplayer;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -73,7 +75,7 @@ public final class ExoPlayerView extends FrameLayout {
         subtitleLayout = new SubtitleView(context);
         subtitleLayout.setLayoutParams(layoutParams);
         subtitleLayout.setUserDefaultStyle();
-        subtitleLayout.setUserDefaultTextSize();
+        subtitleLayout.setFixedTextSize(1, 14);
 
         updateSurfaceView();
 
