@@ -419,11 +419,18 @@ static int const RCTVideoUnset = -1;
   for (int i = 0; i < _textTracks.count; ++i) {
     AVURLAsset *textURLAsset;
     NSString *textUri = [_textTracks objectAtIndex:i][@"uri"];
-    if ([[textUri lowercaseString] hasPrefix:@"http"]) {
+    NSString *textLanguage = [_textTracks objectAtIndex:i][@"language"];
+    
+    // If the language name is disabled, add an empty vtt file stored in the main project of the react-native app
+    if ([textLanguage isEqualToString:@"disabled"]){
+      NSString *emptyVTTString = [[NSBundle mainBundle] pathForResource:@"empty" ofType:@"vtt"];
+      NSURL  *emptyVTTUrl = [NSURL fileURLWithPath:emptyVTTString isDirectory:false];
+      textURLAsset = [AVURLAsset URLAssetWithURL:emptyVTTUrl options:nil];
+      [_textTracks objectAtIndex:i][@"uri"] = emptyVTTUrl;
+    }else{
       textURLAsset = [AVURLAsset URLAssetWithURL:[NSURL URLWithString:textUri] options:assetOptions];
-    } else {
-      textURLAsset = [AVURLAsset URLAssetWithURL:[self urlFilePath:textUri] options:nil];
     }
+      
     AVAssetTrack *textTrackAsset = [textURLAsset tracksWithMediaType:AVMediaTypeText].firstObject;
     if (!textTrackAsset) continue; // fix when there's no textTrackAsset
     [validTextTracks addObject:[_textTracks objectAtIndex:i]];
