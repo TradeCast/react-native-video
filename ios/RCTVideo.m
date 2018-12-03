@@ -422,11 +422,18 @@ static int const RCTVideoUnset = -1;
     NSString *textLanguage = [_textTracks objectAtIndex:i][@"language"];
     
     // If the language name is disabled, add an empty vtt file stored in the main project of the react-native app
-    if ([textLanguage isEqualToString:@"disabled"]){
-      NSString *emptyVTTString = [[NSBundle mainBundle] pathForResource:@"empty" ofType:@"vtt"];
-      NSURL  *emptyVTTUrl = [NSURL fileURLWithPath:emptyVTTString isDirectory:false];
-      textURLAsset = [AVURLAsset URLAssetWithURL:emptyVTTUrl options:nil];
-      [_textTracks objectAtIndex:i][@"uri"] = emptyVTTUrl;
+      if ([textLanguage isEqualToString:@"disabled"]){
+        // Create empty VTT file
+        NSError *error;
+        NSString *stringToWrite = @"WEBVTT\n\n1\n98:00:00.100 --> 98:00:00.200\n.\n\n2\n99:00:00.000 --> 99:00:00.100\n..";
+        NSString *filePath = [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject] stringByAppendingPathComponent:@"empty.vtt"];
+        [stringToWrite writeToFile:filePath atomically:YES encoding:NSUTF8StringEncoding error:&error];
+        
+        if (error == nil){
+            NSURL  *emptyVTTUrl = [NSURL fileURLWithPath:filePath isDirectory:false];
+            textURLAsset = [AVURLAsset URLAssetWithURL:emptyVTTUrl options:nil];
+            [_textTracks objectAtIndex:i][@"uri"] = emptyVTTUrl;
+        }
     }else{
       textURLAsset = [AVURLAsset URLAssetWithURL:[NSURL URLWithString:textUri] options:assetOptions];
     }
