@@ -855,8 +855,6 @@ static int const RCTVideoUnset = -1;
     }
   }
   
-  
-  //  NSArray<AVPlayerItemTrack> *availableTracks = _player.currentItem.tracks;
   int selectedTrackIndex = RCTVideoUnset;
   BOOL isDisabled = NO;
   
