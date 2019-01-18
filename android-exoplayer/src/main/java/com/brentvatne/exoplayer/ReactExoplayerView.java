@@ -795,6 +795,12 @@ class ReactExoplayerView extends FrameLayout implements
         }
 
         TrackGroupArray groups = info.getTrackGroups(rendererIndex);
+
+        // You can't select a group when there is none
+        if (groups == null || groups.length == 0) {
+            return;
+        }
+
         int trackIndex = C.INDEX_UNSET;
 
         if (TextUtils.isEmpty(type)) {
