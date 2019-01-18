@@ -425,7 +425,7 @@ static int const RCTVideoUnset = -1;
     NSString *stringToWrite = @"WEBVTT\n\n1\n98:00:00.100 --> 98:00:00.200\n.\n\n2\n99:00:00.000 --> 99:00:00.100\n..";
     [stringToWrite writeToFile:filePath atomically:YES encoding:NSUTF8StringEncoding error:&error];
   }
-  if (error == nil){
+  if (error == nil && _textTracks.count > 0){
     NSMutableDictionary *emptyVTTDictionary = [[NSMutableDictionary alloc] init];
     emptyVTTDictionary[@"language"] = @"disabled";
     emptyVTTDictionary[@"label"] = @"doesnt_matter_because_its_an_empty_vtt_file";
