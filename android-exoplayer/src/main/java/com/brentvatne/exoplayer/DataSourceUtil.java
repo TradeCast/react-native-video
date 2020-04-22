@@ -1,8 +1,5 @@
 package com.brentvatne.exoplayer;
 
-import android.content.Context;
-import android.content.ContextWrapper;
-
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.modules.network.CookieJarContainer;
 import com.facebook.react.modules.network.ForwardingCookieHandler;
@@ -14,7 +11,6 @@ import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.Util;
 import java.util.Map;
-
 
 public class DataSourceUtil {
 
