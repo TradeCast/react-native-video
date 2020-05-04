@@ -35,9 +35,6 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_SELECTED_TEXT_TRACK = "selectedTextTrack";
     private static final String PROP_SELECTED_TEXT_TRACK_TYPE = "type";
     private static final String PROP_SELECTED_TEXT_TRACK_VALUE = "value";
-    private static final String PROP_SELECTED_VIDEO_TRACK = "selectedVideoTrack";
-    private static final String PROP_SELECTED_VIDEO_TRACK_TYPE = "type";
-    private static final String PROP_SELECTED_VIDEO_TRACK_VALUE = "value";
     private static final String PROP_TEXT_TRACKS = "textTracks";
     private static final String PROP_PAUSED = "paused";
     private static final String PROP_MUTED = "muted";
@@ -179,20 +176,6 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
                     ? selectedAudioTrack.getDynamic(PROP_SELECTED_AUDIO_TRACK_VALUE) : null;
         }
         videoView.setSelectedAudioTrack(typeString, value);
-    }
-
-    @ReactProp(name = PROP_SELECTED_VIDEO_TRACK)
-    public void setSelectedVideoTrack(final ReactExoplayerView videoView,
-                                      @Nullable ReadableMap selectedVideoTrack) {
-        String typeString = null;
-        String value = null;
-        if (selectedVideoTrack != null) {
-            typeString = selectedVideoTrack.hasKey(PROP_SELECTED_VIDEO_TRACK_TYPE)
-                    ? selectedVideoTrack.getString(PROP_SELECTED_VIDEO_TRACK_TYPE) : null;
-            value = selectedVideoTrack.hasKey(PROP_SELECTED_VIDEO_TRACK_VALUE)
-                    ? selectedVideoTrack.getString(PROP_SELECTED_VIDEO_TRACK_VALUE) : null;
-        }
-        videoView.setSelectedVideoTrack(typeString, value);
     }
 
     @ReactProp(name = PROP_SELECTED_TEXT_TRACK)
