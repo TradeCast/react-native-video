@@ -13,6 +13,8 @@ import android.view.View;
 import android.view.Window;
 import android.view.accessibility.CaptioningManager;
 import android.widget.FrameLayout;
+import android.view.WindowManager;
+import android.widget.ImageButton;
 
 import com.brentvatne.react.R;
 import com.brentvatne.receiver.AudioBecomingNoisyReceiver;
@@ -61,6 +63,7 @@ import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultAllocator;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
+import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.Util;
 
 import java.net.CookieHandler;
@@ -157,7 +160,7 @@ class ReactExoplayerView extends FrameLayout implements
                             ) {
                         long pos = player.getCurrentPosition();
                         long bufferedDuration = player.getBufferedPercentage() * player.getDuration() / 100;
-                        eventEmitter.progressChanged(pos, bufferedDuration, player.getDuration());
+                        eventEmitter.progressChanged(pos, bufferedDuration, player.getDuration(), getPositionInFirstPeriodMsForCurrentWindow(pos));
                         msg = obtainMessage(SHOW_PROGRESS);
                         sendMessageDelayed(msg, Math.round(mProgressUpdateInterval));
                     }
@@ -165,6 +168,14 @@ class ReactExoplayerView extends FrameLayout implements
             }
         }
     };
+    
+    public double getPositionInFirstPeriodMsForCurrentWindow(long currentPosition) {
+        Timeline.Window window = new Timeline.Window();
+        if(!player.getCurrentTimeline().isEmpty()) {    
+            player.getCurrentTimeline().getWindow(player.getCurrentWindowIndex(), window);
+        }
+        return window.windowStartTimeMs + currentPosition;
+    }
 
     public ReactExoplayerView(ThemedReactContext context, ReactExoplayerConfig config) {
         super(context);
@@ -209,11 +220,13 @@ class ReactExoplayerView extends FrameLayout implements
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         initializePlayer();
+        setKeepScreenOn(true);
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
+        setKeepScreenOn(false);
         /* We want to be able to continue playing audio when switching tabs.
          * Leave this here in case it causes issues.
          */
@@ -252,7 +265,15 @@ class ReactExoplayerView extends FrameLayout implements
     @Override
     public void onBandwidthSample(int elapsedMs, long bytes, long bitrate) {
         if (mReportBandwidth) {
-            eventEmitter.bandwidthReport(bitrate);
+            if (player == null) {
+                eventEmitter.bandwidthReport(bitrate, 0, 0, "-1");
+            } else {
+                Format videoFormat = player.getVideoFormat();
+                int width = videoFormat != null ? videoFormat.width : 0;
+                int height = videoFormat != null ? videoFormat.height : 0;
+                String trackId = videoFormat != null ? videoFormat.id : "-1";
+                eventEmitter.bandwidthReport(bitrate, height, width, trackId);
+            }
         }
     }
 
@@ -289,6 +310,27 @@ class ReactExoplayerView extends FrameLayout implements
             @Override
             public void onClick(View v) {
                 togglePlayerControlVisibility();
+            }
+        });
+
+        //Handling the playButton click event
+        ImageButton playButton = playerControlView.findViewById(R.id.exo_play);
+        playButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (player != null && player.getPlaybackState() == Player.STATE_ENDED) {
+                    player.seekTo(0);
+                }
+                setPausedModifier(false);
+            }
+        });
+
+        //Handling the pauseButton click event
+        ImageButton pauseButton = playerControlView.findViewById(R.id.exo_pause);
+        pauseButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setPausedModifier(true);
             }
         });
 
@@ -524,9 +566,6 @@ class ReactExoplayerView extends FrameLayout implements
         } else {
             initializePlayer();
         }
-        if (!disableFocus) {
-            setKeepScreenOn(true);
-        }
     }
 
     private void pausePlayback() {
@@ -535,7 +574,6 @@ class ReactExoplayerView extends FrameLayout implements
                 setPlayWhenReady(false);
             }
         }
-        setKeepScreenOn(false);
     }
 
     private void stopPlayback() {
@@ -677,8 +715,9 @@ class ReactExoplayerView extends FrameLayout implements
             Format videoFormat = player.getVideoFormat();
             int width = videoFormat != null ? videoFormat.width : 0;
             int height = videoFormat != null ? videoFormat.height : 0;
+            String trackId = videoFormat != null ? videoFormat.id : "-1";
             eventEmitter.load(player.getDuration(), player.getCurrentPosition(), width, height,
-                    getAudioTrackInfo(), getTextTrackInfo(), getVideoTrackInfo());
+                    getAudioTrackInfo(), getTextTrackInfo(), getVideoTrackInfo(), trackId);
         }
     }
 
@@ -817,7 +856,7 @@ class ReactExoplayerView extends FrameLayout implements
 
     @Override
     public void onPlayerError(ExoPlaybackException e) {
-        String errorString = null;
+        String errorString = "ExoPlaybackException type : " + e.type;
         Exception ex = e;
         if (e.type == ExoPlaybackException.TYPE_RENDERER) {
             Exception cause = e.getRendererException();
@@ -825,7 +864,7 @@ class ReactExoplayerView extends FrameLayout implements
                 // Special case for decoder initialization failures.
                 MediaCodecRenderer.DecoderInitializationException decoderInitializationException =
                         (MediaCodecRenderer.DecoderInitializationException) cause;
-                if (decoderInitializationException.decoderName == null) {
+                if (decoderInitializationException.codecInfo.name == null) {
                     if (decoderInitializationException.getCause() instanceof MediaCodecUtil.DecoderQueryException) {
                         errorString = getResources().getString(R.string.error_querying_decoders);
                     } else if (decoderInitializationException.secureDecoderRequired) {
@@ -837,17 +876,14 @@ class ReactExoplayerView extends FrameLayout implements
                     }
                 } else {
                     errorString = getResources().getString(R.string.error_instantiating_decoder,
-                            decoderInitializationException.decoderName);
+                            decoderInitializationException.codecInfo.name);
                 }
             }
         }
         else if (e.type == ExoPlaybackException.TYPE_SOURCE) {
-            ex = e.getSourceException();
             errorString = getResources().getString(R.string.unrecognized_media_format);
         }
-        if (errorString != null) {
-            eventEmitter.error(errorString, ex);
-        }
+        eventEmitter.error(errorString, ex);
         playerNeedsSource = true;
         if (isBehindLiveWindow(e)) {
             clearResumePosition();
@@ -858,12 +894,14 @@ class ReactExoplayerView extends FrameLayout implements
     }
 
     private static boolean isBehindLiveWindow(ExoPlaybackException e) {
+        Log.e("ExoPlayer Exception", e.toString());
         if (e.type != ExoPlaybackException.TYPE_SOURCE) {
             return false;
         }
         Throwable cause = e.getSourceException();
         while (cause != null) {
-            if (cause instanceof BehindLiveWindowException) {
+            if (cause instanceof BehindLiveWindowException ||
+                    cause instanceof HttpDataSource.HttpDataSourceException) {
                 return true;
             }
             cause = cause.getCause();
@@ -1099,6 +1137,7 @@ class ReactExoplayerView extends FrameLayout implements
             } else {
                 pausePlayback();
             }
+            setKeepScreenOn(!isPaused);
         }
     }
 
