@@ -132,11 +132,6 @@ static int const RCTVideoUnset = -1;
                                                object:nil];
     
     [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(applicationDidEnterBackground:)
-                                                 name:UIApplicationDidEnterBackgroundNotification
-                                               object:nil];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(applicationWillEnterForeground:)
                                                  name:UIApplicationWillEnterForegroundNotification
                                                object:nil];
@@ -229,15 +224,6 @@ static int const RCTVideoUnset = -1;
   
   [_player pause];
   [_player setRate:0.0];
-}
-
-- (void)applicationDidEnterBackground:(NSNotification *)notification
-{
-  if (_playInBackground) {
-    // Needed to play sound in background. See https://developer.apple.com/library/ios/qa/qa1668/_index.html
-    [_playerLayer setPlayer:nil];
-    [_playerViewController setPlayer:nil];
-  }
 }
 
 - (void)applicationWillEnterForeground:(NSNotification *)notification
