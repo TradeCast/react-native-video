@@ -1,13 +1,18 @@
 package com.brentvatne.exoplayer;
 
 import com.facebook.react.bridge.ReactContext;
+import com.facebook.react.modules.network.CookieJarContainer;
+import com.facebook.react.modules.network.ForwardingCookieHandler;
+import com.facebook.react.modules.network.OkHttpClientProvider;
+import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.Util;
 
+import okhttp3.JavaNetCookieJar;
+import okhttp3.OkHttpClient;
 import java.util.Map;
 
 public class DataSourceUtil {
@@ -75,16 +80,15 @@ public class DataSourceUtil {
     }
 
     private static HttpDataSource.Factory buildHttpDataSourceFactory(ReactContext context, DefaultBandwidthMeter bandwidthMeter, Map<String, String> requestHeaders) {
-        DefaultHttpDataSourceFactory factory = new DefaultHttpDataSourceFactory(getUserAgent(context), bandwidthMeter);
+        OkHttpClient client = OkHttpClientProvider.getOkHttpClient();
+        CookieJarContainer container = (CookieJarContainer) client.cookieJar();
+        ForwardingCookieHandler handler = new ForwardingCookieHandler(context);
+        container.setCookieJar(new JavaNetCookieJar(handler));
+        OkHttpDataSourceFactory okHttpDataSourceFactory = new OkHttpDataSourceFactory(client, getUserAgent(context), bandwidthMeter);
 
-        // Add request headers
-        if (requestHeaders != null) {
-            for (Map.Entry<String, String> entry : requestHeaders.entrySet())
-            {
-                factory.setDefaultRequestProperty(entry.getKey(), entry.getValue());
-            }
-        }
+        if (requestHeaders != null)
+            okHttpDataSourceFactory.getDefaultRequestProperties().set(requestHeaders);
 
-        return factory;
+        return okHttpDataSourceFactory;
     }
 }
