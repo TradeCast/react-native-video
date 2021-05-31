@@ -467,7 +467,6 @@ class ReactExoplayerView extends FrameLayout implements
         HttpMediaDrmCallback drmCallback = new HttpMediaDrmCallback(licenseUrl,
                 buildHttpDataSourceFactory(false));
 
-
         if (keyRequestPropertiesArray != null) {
             for (int i = 0; i < keyRequestPropertiesArray.length - 1; i += 2) {
                 drmCallback.setKeyRequestProperty(keyRequestPropertiesArray[i],
