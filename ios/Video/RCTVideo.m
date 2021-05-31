@@ -1230,7 +1230,7 @@ static int const RCTVideoUnset = -1;
   }
   
   // Make sure that the empty VTT track is enabled when it received: type = disabled
-  if (isDisabled) {
+  if (isDisabled && _player != nil && textTracks.count > 0) {
     [_player.currentItem.tracks[_player.currentItem.tracks.count - 1] setEnabled:YES];
   }
 }
