@@ -506,13 +506,6 @@ class ReactExoplayerView extends FrameLayout implements
                         eventEmitter.error(getResources().getString(errorStringId), e);
                     }
                 }
-
-                try {
-                    MediaDrm mediaDrm = new MediaDrm(this.drmUUID);
-                    MediaDrm.ProvisionRequest response = mediaDrm.getProvisionRequest();
-                } catch (UnsupportedSchemeException e) {
-                    Log.i("kaas", "woeiiii");
-                }
                 // End DRM
 
                 return new DashMediaSource.Factory(
