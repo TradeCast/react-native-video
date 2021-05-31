@@ -39,6 +39,7 @@ public final class ExoPlayerView extends FrameLayout {
     private Context context;
     private ViewGroup.LayoutParams layoutParams;
 
+    private boolean isDrmProtected = false;
     private boolean useTextureView = true;
     private boolean hideShutterView = false;
 
@@ -90,6 +91,7 @@ public final class ExoPlayerView extends FrameLayout {
             player.setVideoTextureView((TextureView) surfaceView);
         } else if (surfaceView instanceof SurfaceView) {
             player.setVideoSurfaceView((SurfaceView) surfaceView);
+            ((SurfaceView) surfaceView).setSecure((true));
         }
     }
 
@@ -165,6 +167,13 @@ public final class ExoPlayerView extends FrameLayout {
     public void setUseTextureView(boolean useTextureView) {
         if (useTextureView != this.useTextureView) {
             this.useTextureView = useTextureView;
+            updateSurfaceView();
+        }
+    }
+
+    public void setIsDrmProtected(boolean isDrmProtected) {
+        if (isDrmProtected != this.isDrmProtected) {
+            this.isDrmProtected = isDrmProtected;
             updateSurfaceView();
         }
     }

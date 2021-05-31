@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.media.AudioManager;
+import android.media.MediaDrm;
+import android.media.UnsupportedSchemeException;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
@@ -70,6 +72,7 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.Util;
 
+import java.lang.reflect.Array;
 import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
@@ -502,6 +505,13 @@ class ReactExoplayerView extends FrameLayout implements
                                 ? R.string.error_drm_unsupported_scheme : R.string.error_drm_unknown);
                         eventEmitter.error(getResources().getString(errorStringId), e);
                     }
+                }
+
+                try {
+                    MediaDrm mediaDrm = new MediaDrm(this.drmUUID);
+                    MediaDrm.ProvisionRequest response = mediaDrm.getProvisionRequest();
+                } catch (UnsupportedSchemeException e) {
+                    Log.i("kaas", "woeiiii");
                 }
                 // End DRM
 
@@ -1309,6 +1319,7 @@ class ReactExoplayerView extends FrameLayout implements
     public void setUseTextureView(boolean useTextureView) {
         boolean finallyUseTextureView = useTextureView && this.drmUUID == null;
         exoPlayerView.setUseTextureView(finallyUseTextureView);
+        exoPlayerView.setIsDrmProtected(this.drmUUID != null);
     }
 
     public void setHideShutterView(boolean hideShutterView) {
@@ -1330,10 +1341,12 @@ class ReactExoplayerView extends FrameLayout implements
 
     public void setDrmLicenseUrl(String licenseUrl){
         this.drmLicenseUrl = licenseUrl;
+        exoPlayerView.setIsDrmProtected(licenseUrl != null);
     }
 
     public void setDrmLicenseHeader(String[] header){
         this.drmLicenseHeader = header;
+        exoPlayerView.setIsDrmProtected(header != null && header.length > 0);
     }
 
 
