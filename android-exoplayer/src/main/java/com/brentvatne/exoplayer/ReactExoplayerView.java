@@ -13,7 +13,6 @@ import android.view.View;
 import android.view.Window;
 import android.view.accessibility.CaptioningManager;
 import android.widget.FrameLayout;
-import android.view.WindowManager;
 import android.widget.ImageButton;
 
 import com.brentvatne.react.R;
@@ -31,7 +30,6 @@ import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
 import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
@@ -41,8 +39,6 @@ import com.google.android.exoplayer2.drm.DefaultDrmSessionManager;
 import com.google.android.exoplayer2.drm.DefaultDrmSessionEventListener;
 import com.google.android.exoplayer2.drm.DrmSessionManager;
 import com.google.android.exoplayer2.drm.ExoMediaCrypto;
-import com.google.android.exoplayer2.drm.FrameworkMediaCrypto;
-import com.google.android.exoplayer2.drm.FrameworkMediaDrm;
 import com.google.android.exoplayer2.drm.HttpMediaDrmCallback;
 import com.google.android.exoplayer2.drm.UnsupportedDrmException;
 import com.google.android.exoplayer2.mediacodec.MediaCodecRenderer;
@@ -78,7 +74,6 @@ import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.Map;
@@ -414,9 +409,6 @@ class ReactExoplayerView extends FrameLayout implements
                     DefaultRenderersFactory renderersFactory =
                             new DefaultRenderersFactory(getContext())
                                     .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF);
-
-//                    player = ExoPlayerFactory.newSimpleInstance(getContext(), renderersFactory,
-//                            trackSelector, defaultLoadControl, null, bandwidthMeter);
 
                     player = new SimpleExoPlayer.Builder(getContext(), renderersFactory).setTrackSelector(trackSelector).setBandwidthMeter(bandwidthMeter).setLoadControl(defaultLoadControl).build();
 
