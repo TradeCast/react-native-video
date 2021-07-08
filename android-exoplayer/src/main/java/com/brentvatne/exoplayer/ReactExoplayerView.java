@@ -432,6 +432,22 @@ class ReactExoplayerView extends FrameLayout implements
                 if (playerNeedsSource && srcUri != null) {
                     exoPlayerView.invalidateAspectRatio();
 
+                    // DRM
+                    DrmSessionManager drmSessionManager = null;
+                    if (self.drmUUID != null) {
+                         try {
+                             drmSessionManager = buildDrmSessionManager(self.drmUUID, self.drmLicenseUrl,
+                                     self.drmLicenseHeader);
+                         } catch (UnsupportedDrmException e) {
+                             int errorStringId = Util.SDK_INT < 18 ? R.string.error_drm_not_supported
+                                     : (e.reason == UnsupportedDrmException.REASON_UNSUPPORTED_SCHEME
+                                     ? R.string.error_drm_unsupported_scheme : R.string.error_drm_unknown);
+                             eventEmitter.error(getResources().getString(errorStringId), e);
+                             return;
+                         }
+                     }
+                     // End DRM
+
                     ArrayList<MediaSource> mediaSourceList = buildTextSources();
                     MediaSource videoSource = buildMediaSource(srcUri, extension, drmSessionManager);
                     MediaSource mediaSource;
@@ -495,29 +511,13 @@ class ReactExoplayerView extends FrameLayout implements
                         config.buildLoadErrorHandlingPolicy(minLoadRetryCount)
                 ).createMediaSource(uri);
             case C.TYPE_DASH:
-                // DRM
-                if (this.drmUUID != null) {
-                    try {
-                        drmSessionManager = buildDrmSessionManager(this.drmUUID, this.drmLicenseUrl,
-                                this.drmLicenseHeader);
-                    } catch (UnsupportedDrmException e) {
-                        int errorStringId = Util.SDK_INT < 18 ? R.string.error_drm_not_supported
-                                : (e.reason == UnsupportedDrmException.REASON_UNSUPPORTED_SCHEME
-                                ? R.string.error_drm_unsupported_scheme : R.string.error_drm_unknown);
-                        eventEmitter.error(getResources().getString(errorStringId), e);
-                    }
-                }
-                // End DRM
-
                 return new DashMediaSource.Factory(
-                        new DefaultDashChunkSource.Factory(mediaDataSourceFactory),
-                        buildDataSourceFactory(false)
+                    new DefaultDashChunkSource.Factory(mediaDataSourceFactory),
+                    buildDataSourceFactory(false)
                 ).setDrmSessionManager(drmSessionManager)
-                 .setLoadErrorHandlingPolicy(
+                .setLoadErrorHandlingPolicy(
                         config.buildLoadErrorHandlingPolicy(minLoadRetryCount)
-                )
-                        .setDrmSessionManager(drmSessionManager)
-                        .createMediaSource(uri);
+                ).createMediaSource(uri);
             case C.TYPE_HLS:
                 return new HlsMediaSource.Factory(
                         mediaDataSourceFactory
