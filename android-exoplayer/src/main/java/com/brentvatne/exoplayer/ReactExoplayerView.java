@@ -464,8 +464,7 @@ class ReactExoplayerView extends FrameLayout implements
         }, 1);
     }
 
-    private DrmSessionManager buildDrmSessionManager(UUID uuid,
-                                                                           String licenseUrl, String[] keyRequestPropertiesArray) throws UnsupportedDrmException {
+    private DrmSessionManager buildDrmSessionManager(UUID uuid, String licenseUrl, String[] keyRequestPropertiesArray) throws UnsupportedDrmException {
         if (Util.SDK_INT < 18) {
             return null;
         }
@@ -497,7 +496,6 @@ class ReactExoplayerView extends FrameLayout implements
                 ).createMediaSource(uri);
             case C.TYPE_DASH:
                 // DRM
-                DrmSessionManager<ExoMediaCrypto> drmSessionManager = null;
                 if (this.drmUUID != null) {
                     try {
                         drmSessionManager = buildDrmSessionManager(this.drmUUID, this.drmLicenseUrl,
