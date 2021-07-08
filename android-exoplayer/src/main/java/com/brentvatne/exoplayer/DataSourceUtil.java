@@ -4,7 +4,7 @@ import com.facebook.react.bridge.ReactContext;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSource.Factory;
 import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.Util;
 
@@ -75,14 +75,12 @@ public class DataSourceUtil {
     }
 
     private static HttpDataSource.Factory buildHttpDataSourceFactory(ReactContext context, DefaultBandwidthMeter bandwidthMeter, Map<String, String> requestHeaders) {
-        DefaultHttpDataSourceFactory factory = new DefaultHttpDataSourceFactory(getUserAgent(context), bandwidthMeter);
+        DefaultHttpDataSource.Factory factory = new DefaultHttpDataSource.Factory();
+        factory.setUserAgent(getUserAgent(context)).setTransferListener(bandwidthMeter);
 
         // Add request headers
         if (requestHeaders != null) {
-            for (Map.Entry<String, String> entry : requestHeaders.entrySet())
-            {
-                factory.setDefaultRequestProperty(entry.getKey(), entry.getValue());
-            }
+            factory.setDefaultRequestProperties(requestHeaders);
         }
 
         return factory;
