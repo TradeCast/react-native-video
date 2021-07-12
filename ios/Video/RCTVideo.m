@@ -1079,16 +1079,21 @@ static int const RCTVideoUnset = -1;
     AVAudioSessionCategory category = nil;
     AVAudioSessionCategoryOptions options = nil;
 
-    if([_ignoreSilentSwitch isEqualToString:@"ignore"]) {
-      category = AVAudioSessionCategoryPlayback;
-    } else if([_ignoreSilentSwitch isEqualToString:@"obey"]) {
-      category = AVAudioSessionCategoryAmbient;
-    }
+    if (_muted) {
+        category = AVAudioSessionCategoryAmbient;
+        options = nil;
+    } else {
+      if([_ignoreSilentSwitch isEqualToString:@"ignore"]) {
+        category = AVAudioSessionCategoryPlayback;
+      } else if([_ignoreSilentSwitch isEqualToString:@"obey"]) {
+        category = AVAudioSessionCategoryAmbient;
+      }
 
-    if([_mixWithOthers isEqualToString:@"mix"]) {
-      options = AVAudioSessionCategoryOptionMixWithOthers;
-    } else if([_mixWithOthers isEqualToString:@"duck"]) {
-      options = AVAudioSessionCategoryOptionDuckOthers;
+      if([_mixWithOthers isEqualToString:@"mix"]) {
+        options = AVAudioSessionCategoryOptionMixWithOthers;
+      } else if([_mixWithOthers isEqualToString:@"duck"]) {
+        options = AVAudioSessionCategoryOptionDuckOthers;
+      }
     }
 
     if (category != nil && options != nil) {
